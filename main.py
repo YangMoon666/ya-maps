@@ -12,17 +12,17 @@ import requests
 import shutil
 
 
-POS = ['52.29723', '54.901171']
 L = 'map'
+SPN = 0.001
 
 
 class MainFunc(QMainWindow, Ui_ya_maps):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.spn_lst = [0.002, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 3, 6, 12, 23, 45]
-        self.spn_lst_key = 0
-        self.active_map_name = f'almet-{self.spn_lst[self.spn_lst_key]}.png'
+        self.pos = [52.29723, 54.901171]
+        self.step_ll = 0.001
+        self.active_map_name = f'almet-{self.pos[0]}-{self.pos[1]}.png'
 
         if not os.path.exists('files//img'):
             os.mkdir('files//img')
@@ -32,7 +32,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         self.static_func()
 
     def static_func(self):
-        params = params_func(ll=POS, spn=self.spn_lst[self.spn_lst_key], l=L)
+        params = params_func(ll=self.pos, spn=SPN, l=L)
         response = requests.get(const.STATIC_API_SERVER, params)
         with open(self.active_map_name, "wb") as file:
             file.write(response.content)
@@ -45,15 +45,17 @@ class MainFunc(QMainWindow, Ui_ya_maps):
             shutil.rmtree('img')
 
     def keyPressEvent(self, event):
-        if 0 <= self.spn_lst_key + 1 < len(self.spn_lst) and event.key() == Qt.Key_Up:
-            self.spn_lst_key += 1
-        if 0 <= self.spn_lst_key - 1 < len(self.spn_lst) and event.key() == Qt.Key_Down:
-            self.spn_lst_key -= 1
+        if event.key() == Qt.Key_Up:
+            self.pos[1] += self.step_ll
+        if event.key() == Qt.Key_Down:
+            self.pos[1] -= self.step_ll
+        if event.key() == Qt.Key_Left:
+            self.pos[0] -= self.step_ll
+        if event.key() == Qt.Key_Right:
+            self.pos[0] += self.step_ll
 
-        self.spn_lst_key %= len(self.spn_lst)
-
-        if self.active_map_name != f"almet-{self.spn_lst[self.spn_lst_key]}.png":
-            self.active_map_name = f"almet-{self.spn_lst[self.spn_lst_key]}.png"
+        if self.active_map_name != f'almet-{self.pos[0]}-{self.pos[1]}.png':
+            self.active_map_name = f'almet-{self.pos[0]}-{self.pos[1]}.png'
             if os.access(self.active_map_name, os.F_OK):
                 self.map.setPixmap(QPixmap(self.active_map_name))
             else:
