@@ -451,6 +451,27 @@
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="QLabel" name="status">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>160</y>
+     <width>581</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>8</pointsize>
+    </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: #ff6161;</string>
+   </property>
+   <property name="text">
+    <string>Запрос отвергнут. Причина: ошибка</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

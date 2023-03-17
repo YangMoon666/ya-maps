@@ -121,6 +121,13 @@ class Ui_ya_maps(object):
         self.search_place_btn.setStyleSheet("background: #ff6161;color:white;")
         self.search_place_btn.setAutoDefault(False)
         self.search_place_btn.setObjectName("search_place_btn")
+        self.status = QtWidgets.QLabel(ya_maps)
+        self.status.setGeometry(QtCore.QRect(10, 160, 581, 41))
+        font = QtGui.QFont()
+        font.setPointSize(8)
+        self.status.setFont(font)
+        self.status.setStyleSheet("color: #ff6161;")
+        self.status.setObjectName("status")
 
         self.retranslateUi(ya_maps)
         QtCore.QMetaObject.connectSlotsByName(ya_maps)
@@ -159,3 +166,4 @@ class Ui_ya_maps(object):
         self.label_29.setText(_translate("ya_maps", "\"Left\""))
         self.label_30.setText(_translate("ya_maps", "\"Right\""))
         self.search_place_btn.setText(_translate("ya_maps", "найти"))
+        self.status.setText(_translate("ya_maps", "Запрос отвергнут. Причина: ошибка"))

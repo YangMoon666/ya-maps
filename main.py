@@ -5,9 +5,10 @@ import const
 from params import params_func
 from ya_maps import Ui_ya_maps
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
+from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
+from PyQt5 import QtGui
 import requests
 import shutil
 
@@ -19,6 +20,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.search_place = 'Альметьевск'
         self.l_dict = {'m':'map', 's':'sat', 'g':'sat,skl'}
         self.l_dict_key = 'm'
         self.pos = [52.29723, 54.901171]
@@ -28,15 +30,62 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         self.active_map_name = f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
                                f'{self.l_dict[self.l_dict_key]}.png'
 
+        self.font_error = QtGui.QFont()
+        self.font_error.setFamily("Ubuntu Medium")
+        self.font_error.setPointSize(8)
+
+        self.font_successful = QtGui.QFont()
+        self.font_successful.setFamily("Ubuntu Medium")
+        self.font_successful.setPointSize(19)
+
+        self.status.setFont(self.font_successful)
+        self.status.setText(self.search_place)
+        self.status.setStyleSheet("color: #00a550;")
+
         if not os.path.exists('files//img'):
             os.mkdir('files//img')
 
         os.chdir('files//img')
 
         self.static_func()
+        self.search_place_btn.clicked.connect(self.search_place_func)
+
+    def search_place_geocoder(self):
+        params = params_func(search_place=self.search_place, params_type='geocoder')
+        response = requests.get(const.GEOCODER_API_SERVER, params=params)
+
+        try:
+            json_response = response.json()
+            toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+            toponym_coodrinates = toponym["Point"]["pos"].split()
+
+            return toponym_coodrinates
+        except Exception:
+            pass
+
+        return False
+
+    def search_place_func(self):
+        self.search_place = self.search_place_line.text()
+        search_place_coords = self.search_place_geocoder()
+        if search_place_coords:
+            self.pos = float(search_place_coords[0]), float(search_place_coords[1])
+            self.static_func()
+
+            self.status.setFont(self.font_successful)
+            self.status.setText(self.search_place)
+            self.status.setStyleSheet("color: #00a550;")
+        else:
+            self.status.setFont(self.font_error)
+            self.status.setText('Запрос отвергнут. Причина: ошибка')
+            self.status.setStyleSheet("color: #ff6161;")
+
+        self.search_place_line.clear()
 
     def static_func(self):
-        params = params_func(ll=self.pos, spn=self.spn_lst[self.spn_lst_key], l=self.l_dict[self.l_dict_key])
+
+        params = params_func(ll=self.pos, spn=self.spn_lst[self.spn_lst_key], l=self.l_dict[self.l_dict_key],
+                             params_type='static')
         response = requests.get(const.STATIC_API_SERVER, params)
         with open(self.active_map_name, "wb") as file:
             file.write(response.content)
