@@ -13,16 +13,20 @@ import shutil
 
 
 L = 'map'
-SPN = 0.001
 
 
 class MainFunc(QMainWindow, Ui_ya_maps):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+        self.l_dict = {'m':'map', 's':'sat', 'g':'sat,skl'}
+        self.l_dict_key = 'm'
         self.pos = [52.29723, 54.901171]
         self.step_ll = 0.001
-        self.active_map_name = f'almet-{self.pos[0]}-{self.pos[1]}.png'
+        self.spn_lst = [0.002, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 3, 6, 12, 23, 45]
+        self.spn_lst_key = 0
+        self.active_map_name = f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
+                               f'{self.l_dict[self.l_dict_key]}.png'
 
         if not os.path.exists('files//img'):
             os.mkdir('files//img')
@@ -32,7 +36,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         self.static_func()
 
     def static_func(self):
-        params = params_func(ll=self.pos, spn=SPN, l=L)
+        params = params_func(ll=self.pos, spn=self.spn_lst[self.spn_lst_key], l=self.l_dict[self.l_dict_key])
         response = requests.get(const.STATIC_API_SERVER, params)
         with open(self.active_map_name, "wb") as file:
             file.write(response.content)
@@ -45,6 +49,13 @@ class MainFunc(QMainWindow, Ui_ya_maps):
             shutil.rmtree('img')
 
     def keyPressEvent(self, event):
+        if event.key() == Qt.Key_S:
+            self.l_dict_key = 's'
+        if event.key() == Qt.Key_G:
+            self.l_dict_key = 'g'
+        if event.key() == Qt.Key_M:
+            self.l_dict_key = 'm'
+
         if event.key() == Qt.Key_Up:
             self.pos[1] += self.step_ll
         if event.key() == Qt.Key_Down:
@@ -54,8 +65,17 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         if event.key() == Qt.Key_Right:
             self.pos[0] += self.step_ll
 
-        if self.active_map_name != f'almet-{self.pos[0]}-{self.pos[1]}.png':
-            self.active_map_name = f'almet-{self.pos[0]}-{self.pos[1]}.png'
+        if 0 <= self.spn_lst_key + 1 < len(self.spn_lst) and event.key() == Qt.Key_PageUp:
+            self.spn_lst_key += 1
+        if 0 <= self.spn_lst_key - 1 < len(self.spn_lst) and event.key() == Qt.Key_PageDown:
+            self.spn_lst_key -= 1
+        self.spn_lst_key %= len(self.spn_lst)
+
+        if self.active_map_name != f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
+                                   f'{self.l_dict[self.l_dict_key]}.png':
+            self.active_map_name = \
+                f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
+                f'{self.l_dict[self.l_dict_key]}.png'
             if os.access(self.active_map_name, os.F_OK):
                 self.map.setPixmap(QPixmap(self.active_map_name))
             else:
