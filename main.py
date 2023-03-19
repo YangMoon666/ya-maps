@@ -13,9 +13,6 @@ import requests
 import shutil
 
 
-L = 'map'
-
-
 class MainFunc(QMainWindow, Ui_ya_maps):
     def __init__(self):
         super().__init__()
@@ -49,9 +46,10 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         os.chdir('files//img')
 
         self.static_func()
-        # self.search_place_btn.clicked.connect(self.search_place_func)
 
     def search_place_geocoder(self):
+        # поиск данных о введенном пользователем месте
+
         params = params_func(search_place=self.search_place, params_type='geocoder')
         response = requests.get(const.GEOCODER_API_SERVER, params=params)
 
@@ -67,6 +65,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         return False
 
     def search_place_func(self):
+        # ввод данных о месте для отображения карты
 
         search_place, ok_pressed = QInputDialog.getText(self, "Введите место",
                                                         "Введите место, карту которого вы хотите отобразить?")
@@ -74,6 +73,8 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         if ok_pressed:
             self.search_place = search_place
             search_place_coords = self.search_place_geocoder()
+
+            # исключение ошибок поиска (не грамматических)
             if search_place_coords:
                 self.pos = [float(search_place_coords[0]), float(search_place_coords[1])]
                 self.pt = f'{",".join([str(self.pos[0]), str(self.pos[1])])},comma'
@@ -88,6 +89,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
                 self.status.setStyleSheet("color: #ff6161;")
 
     def static_func(self):
+        # поиск карты по определенным параметрам
 
         params = params_func(ll=self.pos, spn=self.spn_lst[self.spn_lst_key], l=self.l_dict[self.l_dict_key],
                              params_type='static')
@@ -98,15 +100,19 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         self.map.setPixmap(QPixmap(self.active_map_name))
 
     def closeEvent(self, event):
+        # после закрытия окна программы, все изображения безвозвратно удаляются
+
         os.chdir('..')
         if os.path.exists('img'):
             shutil.rmtree('img')
 
     def keyPressEvent(self, event):
 
+        # нажатие на ENTER, открытия окна для поиска места
         if event.key() == 16777220:
             self.search_place_func()
 
+        # смена слоя карты
         if event.key() == Qt.Key_S:
             self.l_dict_key = 's'
         if event.key() == Qt.Key_G:
@@ -114,6 +120,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         if event.key() == Qt.Key_M:
             self.l_dict_key = 'm'
 
+        # передвижение карты
         if event.key() == Qt.Key_Up:
             self.pos[1] += self.step_ll
         if event.key() == Qt.Key_Down:
@@ -123,12 +130,14 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         if event.key() == Qt.Key_Right:
             self.pos[0] += self.step_ll
 
+        # масштабирование карты
         if 0 <= self.spn_lst_key + 1 < len(self.spn_lst) and event.key() == Qt.Key_PageUp:
             self.spn_lst_key += 1
         if 0 <= self.spn_lst_key - 1 < len(self.spn_lst) and event.key() == Qt.Key_PageDown:
             self.spn_lst_key -= 1
         self.spn_lst_key %= len(self.spn_lst)
 
+        # смена карты происходит только по нажатию на горячие клавишы
         if self.active_map_name != f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
                                    f'{self.l_dict[self.l_dict_key]}.png':
             self.active_map_name = \

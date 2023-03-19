@@ -1,3 +1,5 @@
+# константы серверов и ключей API
+
 GEOCODER_API = '40d1649f-0493-4b70-98ba-98533de7710b'
 ORG_API = 'dda3ddba-c9ea-4ead-9010-f43fbc15c6e3'
 

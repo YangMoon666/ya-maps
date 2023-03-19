@@ -1,3 +1,5 @@
+# формирование параметров с данными о введенном пользователем месте
+
 import const
 
 
@@ -15,4 +17,5 @@ def params_func(ll=[52.29723, 54.901171], spn=0.001, l='map', search_place='Ал
             "geocode": search_place,
             "format": "json"
         }
+
     return params or False
