@@ -91,7 +91,6 @@ class MainFunc(QMainWindow, Ui_ya_maps):
 
         params = params_func(ll=self.pos, spn=self.spn_lst[self.spn_lst_key], l=self.l_dict[self.l_dict_key],
                              params_type='static')
-        print(params)
         response = requests.get(const.STATIC_API_SERVER, params)
         with open(self.active_map_name, "wb") as file:
             file.write(response.content)
