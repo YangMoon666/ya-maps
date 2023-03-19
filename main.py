@@ -5,7 +5,7 @@ import const
 from params import params_func
 from ya_maps import Ui_ya_maps
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QInputDialog
 from PyQt5.QtGui import QPixmap, QFont
 from PyQt5.QtCore import Qt
 from PyQt5 import QtGui
@@ -21,7 +21,8 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         super().__init__()
         self.setupUi(self)
         self.search_place = 'Альметьевск'
-        self.l_dict = {'m':'map', 's':'sat', 'g':'sat,skl'}
+        self.pt = ''
+        self.l_dict = {'m': 'map', 's': 'sat', 'g': 'sat,skl'}
         self.l_dict_key = 'm'
         self.pos = [52.29723, 54.901171]
         self.step_ll = 0.001
@@ -48,7 +49,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         os.chdir('files//img')
 
         self.static_func()
-        self.search_place_btn.clicked.connect(self.search_place_func)
+        # self.search_place_btn.clicked.connect(self.search_place_func)
 
     def search_place_geocoder(self):
         params = params_func(search_place=self.search_place, params_type='geocoder')
@@ -66,26 +67,31 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         return False
 
     def search_place_func(self):
-        self.search_place = self.search_place_line.text()
-        search_place_coords = self.search_place_geocoder()
-        if search_place_coords:
-            self.pos = float(search_place_coords[0]), float(search_place_coords[1])
-            self.static_func()
 
-            self.status.setFont(self.font_successful)
-            self.status.setText(self.search_place)
-            self.status.setStyleSheet("color: #00a550;")
-        else:
-            self.status.setFont(self.font_error)
-            self.status.setText('Запрос отвергнут. Причина: ошибка')
-            self.status.setStyleSheet("color: #ff6161;")
+        search_place, ok_pressed = QInputDialog.getText(self, "Введите место",
+                                                "Введите место, карту которого вы хотите отобразить?")
+        if ok_pressed:
 
-        self.search_place_line.clear()
+            self.search_place = search_place
+            search_place_coords = self.search_place_geocoder()
+            if search_place_coords:
+                self.pos = [float(search_place_coords[0]), float(search_place_coords[1])]
+                self.pt = f'{",".join([str(self.pos[0]), str(self.pos[1])])},comma'
+                self.static_func()
+
+                self.status.setFont(self.font_successful)
+                self.status.setText(self.search_place)
+                self.status.setStyleSheet("color: #00a550;")
+            else:
+                self.status.setFont(self.font_error)
+                self.status.setText('Запрос отвергнут. Причина: ошибка')
+                self.status.setStyleSheet("color: #ff6161;")
 
     def static_func(self):
 
         params = params_func(ll=self.pos, spn=self.spn_lst[self.spn_lst_key], l=self.l_dict[self.l_dict_key],
                              params_type='static')
+        print(params)
         response = requests.get(const.STATIC_API_SERVER, params)
         with open(self.active_map_name, "wb") as file:
             file.write(response.content)
@@ -98,6 +104,10 @@ class MainFunc(QMainWindow, Ui_ya_maps):
             shutil.rmtree('img')
 
     def keyPressEvent(self, event):
+
+        if event.key() == 16777220:
+            self.search_place_func()
+
         if event.key() == Qt.Key_S:
             self.l_dict_key = 's'
         if event.key() == Qt.Key_G:
