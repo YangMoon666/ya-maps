@@ -80,6 +80,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
                 self.pt = f'{",".join([str(self.pos[0]), str(self.pos[1])])},comma'
                 self.static_func()
 
+                # статус запроса
                 self.status.setFont(self.font_successful)
                 self.status.setText(self.search_place)
                 self.status.setStyleSheet("color: #00a550;")
@@ -92,7 +93,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         # поиск карты по определенным параметрам
 
         params = params_func(ll=self.pos, spn=self.spn_lst[self.spn_lst_key], l=self.l_dict[self.l_dict_key],
-                             params_type='static')
+                             pt=self.pt, params_type='static')
         response = requests.get(const.STATIC_API_SERVER, params)
         with open(self.active_map_name, "wb") as file:
             file.write(response.content)
