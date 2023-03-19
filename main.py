@@ -69,9 +69,9 @@ class MainFunc(QMainWindow, Ui_ya_maps):
     def search_place_func(self):
 
         search_place, ok_pressed = QInputDialog.getText(self, "Введите место",
-                                                "Введите место, карту которого вы хотите отобразить?")
-        if ok_pressed:
+                                                        "Введите место, карту которого вы хотите отобразить?")
 
+        if ok_pressed:
             self.search_place = search_place
             search_place_coords = self.search_place_geocoder()
             if search_place_coords:
