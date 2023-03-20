@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>599</width>
+    <width>602</width>
     <height>653</height>
    </rect>
   </property>
@@ -419,9 +419,9 @@
   <widget class="QLabel" name="status">
    <property name="geometry">
     <rect>
-     <x>10</x>
-     <y>160</y>
-     <width>581</width>
+     <x>140</x>
+     <y>150</y>
+     <width>451</width>
      <height>41</height>
     </rect>
    </property>
@@ -441,7 +441,7 @@
    <property name="geometry">
     <rect>
      <x>10</x>
-     <y>130</y>
+     <y>120</y>
      <width>581</width>
      <height>31</height>
     </rect>
@@ -454,6 +454,25 @@
    </property>
    <property name="text">
     <string>Нажмите &quot;ENTER&quot;, чтобы ввести данные о месте, карту которого нужно отобразить</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="reset_search">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>150</y>
+     <width>121</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>СБРОС</string>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>

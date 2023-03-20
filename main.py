@@ -17,6 +17,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
+
         self.search_place = 'Альметьевск'
         self.pt = ''
         self.l_dict = {'m': 'map', 's': 'sat', 'g': 'sat,skl'}
@@ -46,6 +47,8 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         os.chdir('files//img')
 
         self.static_func()
+        self.reset_search.setDisabled(True)
+        self.reset_search.clicked.connect(self.data_reset_func)
 
     def search_place_geocoder(self):
         # поиск данных о введенном пользователем месте
@@ -78,7 +81,6 @@ class MainFunc(QMainWindow, Ui_ya_maps):
             if search_place_coords:
                 self.pos = [float(search_place_coords[0]), float(search_place_coords[1])]
                 self.pt = f'{",".join([str(self.pos[0]), str(self.pos[1])])},comma'
-                self.static_func()
 
                 # статус запроса
                 self.status.setFont(self.font_successful)
@@ -107,7 +109,38 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         if os.path.exists('img'):
             shutil.rmtree('img')
 
+    def data_reset_func(self):
+        # сброс данных
+
+        self.search_place = 'Альметьевск'
+        self.pt = ''
+        self.pos = [52.29723, 54.901171]
+        self.spn_lst_key = 0
+        self.l_dict_key = 'm'
+
+        self.status.setFont(self.font_successful)
+        self.status.setText(self.search_place)
+        self.status.setStyleSheet("color: #00a550;")
+
+        self.data_change_func()
+
+    def data_change_func(self):
+        # функция для смены карты
+
+        self.active_map_name = \
+            f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
+            f'{self.l_dict[self.l_dict_key]}.png'
+        if os.access(self.active_map_name, os.F_OK):
+            self.map.setPixmap(QPixmap(self.active_map_name))
+        else:
+            self.static_func()
+
+        self.reset_search.clearFocus()
+        self.reset_search.setDisabled(False)
+
     def keyPressEvent(self, event):
+        self.reset_search.clearFocus()
+        self.reset_search.setDisabled(False)
 
         # нажатие на ENTER, открытия окна для поиска места
         if event.key() == 16777220:
@@ -141,13 +174,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         # смена карты происходит только по нажатию на горячие клавишы
         if self.active_map_name != f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
                                    f'{self.l_dict[self.l_dict_key]}.png':
-            self.active_map_name = \
-                f'almet-{self.spn_lst[self.spn_lst_key]}-{self.pos[0]}-{self.pos[1]}-' \
-                f'{self.l_dict[self.l_dict_key]}.png'
-            if os.access(self.active_map_name, os.F_OK):
-                self.map.setPixmap(QPixmap(self.active_map_name))
-            else:
-                self.static_func()
+            self.data_change_func()
 
 
 if __name__ == '__main__':
