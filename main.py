@@ -18,7 +18,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         super().__init__()
         self.setupUi(self)
 
-        self.search_place = 'Альметьевск'
+        self.search_place = 'Россия, Республика Татарстан, Альметьевск'
         self.pt = ''
         self.l_dict = {'m': 'map', 's': 'sat', 'g': 'sat,skl'}
         self.l_dict_key = 'm'
@@ -50,18 +50,19 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         self.reset_search.setDisabled(True)
         self.reset_search.clicked.connect(self.data_reset_func)
 
-    def search_place_geocoder(self):
+    def search_place_geocoder(self, search_place):
         # поиск данных о введенном пользователем месте
 
-        params = params_func(search_place=self.search_place, params_type='geocoder')
+        params = params_func(search_place=search_place, params_type='geocoder')
         response = requests.get(const.GEOCODER_API_SERVER, params=params)
 
         try:
             json_response = response.json()
             toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
+            toponym_address = toponym["metaDataProperty"]["GeocoderMetaData"]["text"]
             toponym_coodrinates = toponym["Point"]["pos"].split()
 
-            return toponym_coodrinates
+            return toponym_address, toponym_coodrinates
         except Exception:
             pass
 
@@ -74,8 +75,8 @@ class MainFunc(QMainWindow, Ui_ya_maps):
                                                         "Введите место, карту которого вы хотите отобразить?")
 
         if ok_pressed:
-            self.search_place = search_place
-            search_place_coords = self.search_place_geocoder()
+            search_place_adress, search_place_coords = self.search_place_geocoder(search_place)
+            self.search_place = search_place_adress
 
             # исключение ошибок поиска (не грамматических)
             if search_place_coords:
@@ -112,7 +113,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
     def data_reset_func(self):
         # сброс данных
 
-        self.search_place = 'Альметьевск'
+        self.search_place = 'Россия, Республика Татарстан, Альметьевск'
         self.pt = ''
         self.pos = [52.29723, 54.901171]
         self.spn_lst_key = 0
