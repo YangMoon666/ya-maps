@@ -5,10 +5,10 @@ import const
 from params import params_func
 from ya_maps import Ui_ya_maps
 import sys
-from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QInputDialog
-from PyQt5.QtGui import QPixmap, QFont
-from PyQt5.QtCore import Qt
-from PyQt5 import QtGui
+from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QInputDialog, QWidget
+from PyQt5.QtGui import QPixmap, QFont, QFocusEvent
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5 import QtGui, QtCore
 import requests
 import shutil
 
@@ -18,7 +18,9 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         super().__init__()
         self.setupUi(self)
 
-        self.search_place = 'Россия, Республика Татарстан, Альметьевск'
+        self.search_place = 'Россия, Республика Татарстан, Альметьевск, улица Ленина, 1В'
+        self.search_place_postal_code = ', 423458'
+        self.search_place_postal_code_bool = True
         self.pt = ''
         self.l_dict = {'m': 'map', 's': 'sat', 'g': 'sat,skl'}
         self.l_dict_key = 'm'
@@ -38,7 +40,8 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         self.font_successful.setPointSize(19)
 
         self.status.setFont(self.font_successful)
-        self.status.setText(self.search_place)
+        self.status.setText(self.search_place + self.search_place_postal_code
+                            if self.search_place_postal_code_bool else self.search_place)
         self.status.setStyleSheet("color: #00a550;")
 
         if not os.path.exists('files//img'):
@@ -47,8 +50,23 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         os.chdir('files//img')
 
         self.static_func()
-        self.reset_search.setDisabled(True)
         self.reset_search.clicked.connect(self.data_reset_func)
+        self.postal_code_btn.clicked.connect(self.postal_code_btn_func)
+
+    def postal_code_btn_func(self):
+        self.search_place_postal_code_bool = False if self.search_place_postal_code_bool else True
+
+        self.status.setFont(self.font_successful)
+        self.status.setText(self.search_place + self.search_place_postal_code
+                            if self.search_place_postal_code_bool else self.search_place)
+        self.status.setStyleSheet("color: #00a550;")
+
+    def focusInEvent(self, event: QFocusEvent):
+        # фокус при разных обстоятельствах при нажатии на кнопки вверх, влево и тд, переходит к кнопке
+        self.reset_search.clearFocus()
+
+    def focusOutEvent(self, event: QFocusEvent):
+        self.reset_search.clearFocus()
 
     def search_place_geocoder(self, search_place):
         # поиск данных о введенном пользователем месте
@@ -60,9 +78,12 @@ class MainFunc(QMainWindow, Ui_ya_maps):
             json_response = response.json()
             toponym = json_response["response"]["GeoObjectCollection"]["featureMember"][0]["GeoObject"]
             toponym_address = toponym["metaDataProperty"]["GeocoderMetaData"]["text"]
+            toponym_postal_code = toponym["metaDataProperty"]["GeocoderMetaData"]["Address"].get('postal_code', '')
+            if toponym_postal_code:
+                toponym_postal_code = f', {toponym_postal_code}'
             toponym_coodrinates = toponym["Point"]["pos"].split()
 
-            return toponym_address, toponym_coodrinates
+            return toponym_address, toponym_coodrinates, toponym_postal_code
         except Exception:
             pass
 
@@ -75,8 +96,9 @@ class MainFunc(QMainWindow, Ui_ya_maps):
                                                         "Введите место, карту которого вы хотите отобразить?")
 
         if ok_pressed:
-            search_place_adress, search_place_coords = self.search_place_geocoder(search_place)
+            search_place_adress, search_place_coords, toponym_postal_code = self.search_place_geocoder(search_place)
             self.search_place = search_place_adress
+            self.search_place_postal_code = toponym_postal_code
 
             # исключение ошибок поиска (не грамматических)
             if search_place_coords:
@@ -85,7 +107,8 @@ class MainFunc(QMainWindow, Ui_ya_maps):
 
                 # статус запроса
                 self.status.setFont(self.font_successful)
-                self.status.setText(self.search_place)
+                self.status.setText(self.search_place + self.search_place_postal_code
+                                    if self.search_place_postal_code_bool else self.search_place)
                 self.status.setStyleSheet("color: #00a550;")
             else:
                 self.status.setFont(self.font_error)
@@ -113,14 +136,17 @@ class MainFunc(QMainWindow, Ui_ya_maps):
     def data_reset_func(self):
         # сброс данных
 
-        self.search_place = 'Россия, Республика Татарстан, Альметьевск'
+        self.search_place = 'Россия, Республика Татарстан, Альметьевск, улица Ленина, 1В'
+        self.search_place_postal_code = ', 423458'
+        self.search_place_postal_code_bool = True
         self.pt = ''
         self.pos = [52.29723, 54.901171]
         self.spn_lst_key = 0
         self.l_dict_key = 'm'
 
         self.status.setFont(self.font_successful)
-        self.status.setText(self.search_place)
+        self.status.setText(self.search_place + self.search_place_postal_code
+                            if self.search_place_postal_code_bool else self.search_place)
         self.status.setStyleSheet("color: #00a550;")
 
         self.data_change_func()
@@ -136,13 +162,7 @@ class MainFunc(QMainWindow, Ui_ya_maps):
         else:
             self.static_func()
 
-        self.reset_search.clearFocus()
-        self.reset_search.setDisabled(False)
-
     def keyPressEvent(self, event):
-        self.reset_search.clearFocus()
-        self.reset_search.setDisabled(False)
-
         # нажатие на ENTER, открытия окна для поиска места
         if event.key() == 16777220:
             self.search_place_func()
@@ -182,4 +202,7 @@ if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = MainFunc()
     ex.show()
+    app.focusChanged.connect(
+        lambda old, new: ex.focusInEvent(QFocusEvent(QFocusEvent.FocusIn)) if ex.isAncestorOf(
+            new) else ex.focusOutEvent(QFocusEvent(QFocusEvent.FocusOut)))
     sys.exit(app.exec_())
